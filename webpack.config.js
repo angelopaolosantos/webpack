@@ -1,71 +1,87 @@
 // webpack.config.js
 var webpack = require('webpack');
 var path = require('path');
+// var HtmlWebpackPlugin = require('html-webpack-plugin');
 
-// definePlugin takes raw strings and inserts them, so you can put strings of JS if you want.
-var definePlugin = new webpack.DefinePlugin({
-  __DEV__: JSON.stringify(JSON.parse(process.env.BUILD_DEV || 'true')),
-  __PRERELEASE__: JSON.stringify(JSON.parse(process.env.BUILD_PRERELEASE || 'false'))
-});
-
-module.exports = {
-  devtool: 'inline-source-map',
+const config = {
   entry: {
-  	Profile: './profile.js',
-  	Feed: './feed.js'
+    app: './src/app.js',
+    //vendors: './src/vendors.js'
   },
-  output: {
-  	path: path.join(__dirname, 'public','assets'); // This is where images AND js will go
-  	publicPath: 'http://mycdn.com/assets/', // This is used to generate URLs to e.g. images
+  // for multi page application 
+  /* 
+  entry: {
+    pageOne: './src/pageOne/index.js',
+    pageTwo: './src/pageTwo/index.js',
+    pageThree: './src/pageThree/index.js'
+  }
+  */
+ output: {
+    path: path.join(__dirname, 'public','assets'), // This is where images AND js will go
+    publicPath: 'http://mycdn.com/assets/', // This is used to generate URLs to e.g. images
     filename: '[name].bundle.js'  // Template based on keys in entry above    
   },
   module: {
-  	preLoaders: [
- 	  {
+    rules: [
+      /*
+      {
+        enforce: 'pre',
         test: /\.js$/,
         exclude: /node_modules/,
         loader: 'jshint-loader'
 
-      }
-  	],
-    loaders: [
-      { 
-      	test: /\.coffee$/, 
-      	loader: 'coffee-loader' 
       },
+      */
       {
-        test: /\.es6$/,
+        test: /\.(js|jsx)$/,
         exclude: /node_modules/,
         loader: 'babel-loader',
-        query: {
+        options: {
           presets: ['es2015', 'react']
         }
       },
       { 
-      	test: /\.less$/, 
-      	loader: 'style-loader!css-loader!less-loader' 
+        test: /\.less$/, 
+        use: [
+          { loader: 'style-loader' },
+          { loader: 'css-loader' },
+          { loader: 'less-loader' }
+        ] 
       }, // use ! to chain loaders
       { 
-      	test: /\.scss$/, 
-      	loader: 'style-loader!css-loader!scss-loader' 
-      }, 
-      { 
-      	test: /\.css$/, 
-      	loader: 'style-loader!css-loader' 
+        test: /\.scss$/, 
+        use: [
+          { loader: 'style-loader' },
+          { loader: 'css-loader' },
+          { loader: 'scss-loader' }
+        ] 
       },
       { 
-      	test: /\.(png|jpg)$/, 
-      	loader: 'url-loader?limit=8192' 
+        test: /\.sass$/, 
+        use: [
+          { loader: 'style-loader' },
+          { loader: 'css-loader' },
+          { loader: 'sass-loader' }
+        ] 
+      },  
+      { 
+        test: /\.css$/, 
+        use: [
+          { loader: 'style-loader' },
+          { loader: 'css-loader' },
+        ]  
+      },
+      { 
+        test: /\.(png|jpg)$/, 
+        loader: 'url-loader?limit=8192' 
       } // inline base64 URLs for <=8k images, direct URLs for the rest
     ]
   },
-  resolve: {
-    // you can now require('file') instead of require('file.coffee')
-    extensions: ['', '.js', 'es6', '.json', '.coffee'],
-    moduleDirectories: ['node_modules','src'] 
-  },
   plugins: [
-  	new webpack.optimize.CommonsChunkPlugin('common.js');
-  ],
-  // watch: true; or type 'webpack --watch' in the terminal
+    new webpack.optimize.CommonsChunkPlugin('common.js'),
+    new webpack.optimize.UglifyJsPlugin(),
+    // new HtmlWebpackPlugin({template: './src/index.html'})
+  ]
 };
+
+module.exports = config;
